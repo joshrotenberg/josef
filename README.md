@@ -17,9 +17,10 @@ Boilerplate reduction for processing Kafka streams with Clojure Transducers
       [& args]
       (let [cons (c/get-consumer "localhost:2181" "whatever")]
       	   (c/process-stream con "test"
-	   		     (comp (map msg->String)
-			           (map clojure.string/upper-case))
-			      println)))
+	   		     (comp (map msg->String)                # turn kafka message payload into a string
+                                   (filter #(< 4 (count %)))        # filter out strings shorter than 4 characters
+			           (map clojure.string/upper-case)) # uppercase them 
+			      println)))                            # print to stdout
 ```
 
 ## Overview
