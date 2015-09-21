@@ -16,9 +16,9 @@ Boilerplate reduction for processing Kafka streams with Clojure Transducers
 (defn -main
       [& args]
       (let [cons (c/get-consumer "localhost:2181" "whatever")]
-      	   (c/process-streams con "test"
-	   		      (comp (map msg->String)
-			      	    (map clojure.string/upper-case))
+      	   (c/process-stream con "test"
+	   		     (comp (map msg->String)
+			           (map clojure.string/upper-case))
 			      println)))
 ```
 
