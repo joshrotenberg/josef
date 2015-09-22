@@ -36,6 +36,6 @@
 (defn process-stream
   "Process a single stream. Convenience for process-streams with a single stream."
   [consumer topic xform & rf]
-  (if (count rf)
+  (if (< 0 (count rf))
     (process-streams consumer topic 1 xform (first rf))
-        (process-streams consumer topic 1 xform)))
+    (first (process-streams consumer topic 1 xform))))
