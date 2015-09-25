@@ -4,10 +4,7 @@ Boilerplate reduction for processing Kafka streams with Clojure Transducers
 
 ## Usage
 
-in your project.clj:
 [![Clojars Project](http://clojars.org/josef/latest-version.svg)](http://clojars.org/josef)
-
-then
 
 ```clojure
 (ns my.app
