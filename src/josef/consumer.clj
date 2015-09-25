@@ -1,41 +1,66 @@
 (ns josef.consumer
-  (:require [clj-kafka.consumer.zk :as zk]))
+  (:import [java.util.Properties])
+  (:import [kafka.consumer ConsumerConfig Consumer KafkaStream Whitelist]
+           [kafka.javaapi.consumer ConsumerConnector]
+           [kafka.serializer DefaultDecoder])
+  (:require [josef.util :refer [map->Properties]]))
 
-(defn get-consumer
-  "Takes a comma separated list of zookeeper host:ports and a consumer group id and returns a consumer."
-  [zookeepers group-id & {:keys []
-                          :as args
-                          :or []}]
-  (let [config {"zookeeper.connect" zookeepers
-                "group.id" group-id
-                "auto.offset.reset" "largest"
-                "auto.commit.enable" "false"}]
-    (zk/consumer config)))
+(defn consumer
+  "Returns a Kafka consumer pointed at zookeeper with the given consumer group id."
+  [zookeeper group-id & {:keys [auto-offset-reset
+                                auto-commit-interval-ms
+                                auto-commit-enable]
+                         :as args}]
+  (->> (assoc args "zookeeper.connect" zookeeper "group.id" group-id) ;; map of all the args
+       map->Properties ;; create a Properties instance
+       (ConsumerConfig.) ;; create a config
+       (Consumer/createJavaConsumerConnector))) ;; and create a consumer
 
 (defn shutdown-consumer
   "Convenience for .shutdown on the Kafka consumer."
   [con]
   (.shutdown con))
 
-(defn process-streams
-  "Process multiple Kafka streams. Takes a consumer, a topic, the
-  number of concurrent streams, an xform, and, optionally, a final
-  function with side effects. The 4-arity version returns a vector of
-  eductions suitable for processing however you want. The 5-arity
-  version will call run! on each stream, useful for processing the
-  resulting items when side effects are needed (i.e. update a
-  database, write to another Kafka topic, etc)"
-  ([consumer topic num-streams xform rf]
-   (let [streams (process-streams consumer topic num-streams xform)]
-     (doseq [s streams]
-       (run! rf s))))
-  ([consumer topic num-streams xform]
-   (let [streams (zk/create-message-streams consumer {topic num-streams})]
-     (mapv #(eduction xform %) (get streams topic)))))
+(defn message-streams
+  "Creates the specified number of streams on the topic pattern and returns a collection of streams."
+  [consumer topic num-streams & {:keys [key-decoder
+                                        value-decoder]
+                                 :or {key-decoder (DefaultDecoder. nil)
+                                      value-decoder (DefaultDecoder. nil)}}]
+  (.createMessageStreamsByFilter consumer (Whitelist. topic) num-streams key-decoder value-decoder))
 
-(defn process-stream
-  "Process a single stream. Convenience for process-streams with a single stream."
-  [consumer topic xform & rf]
-  (if (< 0 (count rf))
-    (process-streams consumer topic 1 xform (first rf))
-    (first (process-streams consumer topic 1 xform))))
+(defn message-stream
+  "Like message-streams but only creates a single stream for the topic pattern."
+  [consumer topic & {:keys [key-decoder
+                            value-decoder]
+                     :or {key-decoder (DefaultDecoder. nil)
+                          value-decoder (DefaultDecoder. nil)}
+                     :as decoder-args}]
+  (first (apply message-streams consumer topic 1 decoder-args)))
+
+
+(defn process-streams!
+  "Process mulitple streams on the given topic pattern with the given xform, passing the final result to the rf
+  function (presumably for side effects)."
+  [consumer topic num-streams xf rf & {:keys [key-decoder
+                                              value-decoder]
+                                       :or {key-decoder (DefaultDecoder. nil)
+                                            value-decoder (DefaultDecoder. nil)}
+                                       :as decoder-args}]
+  (let [agents (->> (apply message-streams consumer topic num-streams decoder-args)
+                    (map #(agent %)))]
+    (try
+      (doseq [a agents] (send-off a #(run! rf (eduction xf %))))
+      (apply await agents)
+      (finally
+        (shutdown-consumer consumer)))))
+
+(defn process-stream!
+  "Like process-streams! but only creates a single stream."
+  [consumer topic xf rf & {:keys [key-decoder
+                                  value-decoder]
+                           :or {key-decoder (DefaultDecoder. nil)
+                                value-decoder (DefaultDecoder. nil)}
+                           :as decoder-args}]
+  (apply process-streams! consumer topic 1 xf rf decoder-args))
+

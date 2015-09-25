@@ -6,29 +6,32 @@ Boilerplate reduction for processing Kafka streams with Clojure Transducers
 
 ```clojure
 (ns my.app
-    (:require [josef.consumer :as c]))
+    (:require [josef.consumer :as j]))
 
 (defn msg->String
-      [m]
-     (String. (.message m)))
+  [m]
+  (String. (.message m)))
 
+(defn more-than-four
+  [s]
+  (< 4 (count s)))
 
 (defn -main
-      [& args]
-      (let [cons (c/get-consumer "localhost:2181" "whatever")]
-      	   (c/process-stream con "test"
-	   		     (comp (map msg->String)                # turn kafka message payload into a string
-                                   (filter #(< 4 (count %)))        # filter out strings shorter than 4 characters
-			           (map clojure.string/upper-case)) # uppercase them 
-			      println)))                            # print to stdout
+  [& args]
+  (let [cnsmr (j/consumer "localhost:2181" "whatever") ;; get a Kafka consumer
+        topic-pattern "test.*"                         ;; specify all of our test topics
+        xf (comp (map msg->String)                     ;; compose our processing transducer xform
+                 (filter more-than-four)
+                 (map clojure.string/upper-case)
+		 (partition-all 5))                     ;; and process 5 at a time
+        rf println]                                     ;; and println out the results
+    (j/process-stream! cnsmr topic-pattern xf rf)))
 ```
 
 ## Overview
 
-`josef` is a simple wrapper around
-[clj-kafka](https://github.com/pingles/clj-kafka) to make processing
-Kafka streams with Clojure
-[transducers](http://clojure.org/transducers) easier.
+`josef` is a simple library for processing [Kafka](http://kafka.apache.org/) streams with Clojure
+[transducers](http://clojure.org/transducers).
 
 I had a bunch of similar but ultimately distinct filters that needed
 to process the same Kafka topic. Clojure
