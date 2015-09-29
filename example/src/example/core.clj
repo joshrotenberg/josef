@@ -24,6 +24,7 @@
   (let [prdcr (jp/producer "localhost:9092")            ;; get a Kafka producer
         cnsmr (jc/consumer "localhost:2181" "whatever") ;; get a Kafka consumer
         topic-pattern "test.*"                          ;; specify all of our test topics
+        num-streams 4                                   ;; create 4 streams for parellel string uppercasing
         xf (comp                                        ;; compose our processing transducer xform
             (map msg->String)                           ;; stringify each message
             (filter more-than-four)                     ;; only process stings that are longer than four characters
@@ -31,4 +32,4 @@
             (partition-all 5))                          ;; and batch together 5 at a time
         rf #(doseq [m %]                                ;; doseq across our batch of 5 
               (produce-result! prdcr m))]               ;; and produce to the "upped" topic
-    (jc/process-stream! cnsmr topic-pattern xf rf)))    ;; wrap the whole thing up into a single call
+    (jc/process-streams! cnsmr topic-pattern num-streams xf rf))) ;; wrap the whole thing up into a single call
