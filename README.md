@@ -62,6 +62,10 @@ stream instances.
 
 `josef` is named after Josef K. in Franz Kafka's "The Trial", or, it's original title in German, "Der Process" ... witty, no? Yeah, a bit of a stretch.
 
+## Status
+
+`josef` has been an idea for a few months now but has only been real code for a couple of weeks. There are almost certainly bugs, inconsistencies in the API, and spots where performance can be improved (type hints, etc). Use with caution. Suggestions and pull requests are welcome.
+
 ## TODO
 
 - Tests
