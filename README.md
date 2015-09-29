@@ -60,6 +60,8 @@ streams themselves for other reasons, `josef` also exposes the
 functions used by `process-stream!` to access the raw Kafka message
 stream instances.
 
+`josef` is named after Josef K. in Franz Kafka's "The Trial", or, it's original title in German, "Der Process" ... witty, no? Yeah, a bit of a stretch.
+
 ## TODO
 
 - Tests
