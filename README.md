@@ -43,11 +43,26 @@ found myself writing the same boilerplate otherwise. After two, I
 broke it out into a seprate, more general function. After a few more,
 I figured it was time for a little library.
 
+## Streams
+
+Kafka streams are Iterable, which allows Clojure transducers to slice
+and dice them the same way you might use any other Clojure
+collection. `josef` wraps up some of the details and allows you to
+call a single function to create a long running Kafka processor with
+minimal effort. I've also included a simplistic Kafka Producer
+implementation as consuming and then producing some result is a fairly
+common paradigm. If you need more control over the producer, however,
+please see [Paul Ingle](https://github.com/pingles)'s much more
+complete [clj-kafka](https://github.com/pingles/clj-kafka) (without which `josef` would not have been possible). See the example application for a usage example of the included producer.
+
+As a bonus, if for some reason you'd like access to the Kafka message
+streams themselves for other reasons, `josef` also exposes the
+functions used by `process-stream!` to access the raw Kafka message
+stream instances.
+
 ## TODO
 
-- Producer implementation for completeness
 - Tests
-- Example applicaiton
 
 ## License
 
