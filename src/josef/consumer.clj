@@ -1,5 +1,5 @@
 (ns josef.consumer
-  (:import [java.util.Properties])
+  (:import [java.util Properties])
   (:import [kafka.consumer ConsumerConfig Consumer KafkaStream Whitelist]
            [kafka.javaapi.consumer ConsumerConnector]
            [kafka.serializer DefaultDecoder])

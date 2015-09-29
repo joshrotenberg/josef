@@ -25,7 +25,7 @@ Boilerplate reduction for processing Kafka streams with Clojure Transducers
         xf (comp (map msg->String)                     ;; compose our processing transducer xform
                  (filter more-than-four)
                  (map clojure.string/upper-case)
-		 (partition-all 5))                     ;; and process 5 at a time
+                 (partition-all 5))                     ;; and process 5 at a time
         rf println]                                     ;; and println out the results
     (j/process-stream! cnsmr topic-pattern xf rf)))
 ```
@@ -42,6 +42,12 @@ compose various pieces and build transformations and filters, but I
 found myself writing the same boilerplate otherwise. After two, I
 broke it out into a seprate, more general function. After a few more,
 I figured it was time for a little library.
+
+## TODO
+
+- Producer implementation for completeness
+- Tests
+- Example applicaiton
 
 ## License
 
