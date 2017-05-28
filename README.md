@@ -40,7 +40,7 @@ to process the same Kafka topic. Clojure
 transducers are a great way to
 compose various pieces and build transformations and filters, but I
 found myself writing the same boilerplate otherwise. After two, I
-broke it out into a seprate, more general function. After a few more,
+broke it out into a separate, more general function. After a few more,
 I figured it was time for a little library.
 
 ## Streams
